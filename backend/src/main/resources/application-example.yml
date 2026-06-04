@@ -1,0 +1,25 @@
+# ============================================
+# 本地开发配置模板
+# 使用方法：复制此文件为 application-dev.yml 并填入真实值
+# application-dev.yml 已被 .gitignore 排除，不会提交到仓库
+# ============================================
+
+# 数据源配置（覆盖 application.yml 中的占位符）
+spring:
+  datasource:
+    password: 你的MySQL密码
+
+# 文件存储 — 阿里云OSS密钥（如果 storage-mode=oss）
+file:
+  oss:
+    access-key-id: 你的AccessKeyId
+    access-key-secret: 你的AccessKeySecret
+
+# AI服务密钥
+ai:
+  deepseek:
+    api-key: sk-你的DeepSeekAPIKey
+
+# JWT签名密钥（至少256位）
+jwt:
+  secret: 你的JWT密钥（至少32字符）
