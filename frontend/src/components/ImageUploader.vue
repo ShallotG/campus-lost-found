@@ -6,7 +6,7 @@
         <div class="upload-text">拖拽图片到此处或<em>点击上传</em></div>
         <div class="upload-hint">仅支持 JPG/PNG 格式，最大 5MB</div>
       </template>
-      <img v-else :src="previewUrl" class="preview-image" />
+      <img v-else :src="previewUrl" alt="预览图片" class="preview-image" />
     </el-upload>
     <div v-if="detecting" class="upload-tip"><el-icon class="is-loading"><Loading /></el-icon> AI正在识别物品类别...</div>
     <div v-if="detectResult && !detecting" class="detect-result">
@@ -27,7 +27,7 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { ElMessage } from 'element-plus'
-import { MagicStick } from '@element-plus/icons-vue'
+import { MagicStick, UploadFilled, Loading } from '@element-plus/icons-vue'
 import request from '@/api/index'
 
 const props = defineProps({ modelValue: String, category: String, confidence: Number })
@@ -60,8 +60,9 @@ async function doDetect(rawFile) {
     formData.append('file', rawFile)
     const result = await request.post('/lost-items/detect', formData, { headers: { 'Content-Type': 'multipart/form-data' } })
     detectResult.value = { category: result.category, categoryCn: result.categoryCn, confidence: result.confidence, description: result.description || result.categoryCn || '', top3: result.top3 || [] }
-    if (result.description) { emit('update:category', result.description); emit('update:confidence', result.confidence || 0) }
-    else if (result.top3 && result.top3.length > 0) selectOption(0)
+    const label = result.categoryCn || result.description || ''
+    if (label) { emit('update:category', label); emit('update:confidence', result.confidence || 0) }
+    if (result.top3 && result.top3.length > 0) selectOption(0)
     ElMessage.success('AI识别完成')
   } catch (e) { ElMessage.error('AI检测失败') }
   finally { detecting.value = false }
@@ -83,7 +84,7 @@ async function uploadFile() {
 }
 
 function reset() { previewUrl.value = null; pendingFile.value = null; detectResult.value = null; selectedOption.value = -1; imageUrl.value = ''; emit('update:category', ''); emit('update:confidence', 0) }
-defineExpose({ uploadFile, reset })
+defineExpose({ uploadFile, reset, detectResult })
 </script>
 
 <style scoped>

@@ -94,16 +94,17 @@ async function handleSubmit() {
   submitting.value = true
   try {
     // 1. 先上传文件到OSS/本地（此前仅做了AI检测，文件尚未保存）
-    const imageUrl = await uploaderRef.value.uploadFile()
-    form.imageUrl = imageUrl
+    form.imageUrl = await uploaderRef.value.uploadFile()
 
     // 2. 创建拾物记录
+    // 如果备注为空，自动填入AI识别描述（颜色+材质等信息）
+    const remark = form.remark || uploaderRef.value?.detectResult?.description || ''
     await createLostItem({
       imageUrl: form.imageUrl,
       category: form.category,
       categoryConfidence: form.categoryConfidence,
       storageLocation: form.storageLocation,
-      remark: form.remark,
+      remark,
     })
     ElMessage.success('拾物登记成功')
     resetForm()
