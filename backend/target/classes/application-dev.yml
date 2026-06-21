@@ -1,0 +1,27 @@
+# ============================================
+# 本地开发环境配置（包含敏感信息，禁止提交Git）
+# 此文件已在 .gitignore 中排除
+# ============================================
+
+# 数据源配置
+spring:
+  datasource:
+    password: 123456
+
+# 文件存储 — 阿里云OSS密钥
+file:
+  oss:
+    access-key-id: LTAI5tABnw2BDGT9jrNMfUig
+    access-key-secret: H2fAyceMfQmfGugZG16VjZPBmKgz8F
+
+# AI服务密钥
+ai:
+  deepseek:
+    api-key: sk-797784d8e5f34a62ab5ac2a4879aa262
+  qwen:
+    vl:
+      api-key: sk-ws-H.RPRRIHY.u9hr.MEQCIFQxtjLthkTqAAN8cTEa7AA6wjjiu26xhPbf-Y9f0AL5AiAXbClJzfYtHuc9gDLvl5yvdhFJTU39-GCmTstq3pansw
+      model: qwen-vl-plus
+# JWT签名密钥
+jwt:
+  secret: campus-lost-found-secret-key-must-be-at-least-256-bits-long-for-hs256

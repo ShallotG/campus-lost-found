@@ -1,0 +1,85 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: campus-lost-found
+  profiles:
+    active: dev
+
+  # 数据源配置
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+    url: jdbc:mysql://localhost:3306/campus_lost_found?useUnicode=true&characterEncoding=UTF-8&serverTimezone=Asia/Shanghai&useSSL=false&allowPublicKeyRetrieval=true
+    username: root
+    password: ${DB_PASSWORD:}   # 请在 application-dev.yml 或环境变量中配置
+
+  # Redis配置
+  data:
+    redis:
+      host: ${REDIS_HOST:localhost}
+      port: ${REDIS_PORT:6379}
+      timeout: 3000ms
+
+  # 文件上传
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 10MB
+
+  # Jackson配置
+  jackson:
+    date-format: yyyy-MM-dd HH:mm:ss
+    time-zone: Asia/Shanghai
+    default-property-inclusion: non_null
+
+# MyBatis-Plus配置
+mybatis-plus:
+  mapper-locations: classpath:mapper/*.xml
+  type-aliases-package: com.campus.lostfound.entity
+  configuration:
+    map-underscore-to-camel-case: true
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl
+  global-config:
+    db-config:
+      id-type: auto
+      logic-delete-field: deleted
+      logic-delete-value: 1
+      logic-not-delete-value: 0
+
+# JWT配置
+jwt:
+  secret: ${JWT_SECRET:}                    # 请在 application-dev.yml 或环境变量中配置
+  access-token-expiration: 900000           # 15分钟
+  refresh-token-expiration: 604800000       # 7天
+
+# 文件存储配置
+file:
+  # 本地存储路径（storage-mode=local 时生效）
+  upload-dir: ./uploads
+
+# AI服务配置
+ai:
+  deepseek:
+    api-key: ${DEEPSEEK_API_KEY:}            # 请在 application-dev.yml 或环境变量中配置
+    embedding-model: text-embedding-3-small
+    chat-model: deepseek-chat
+    enabled: ${DEEPSEEK_ENABLED:true}
+  qwen:
+    vl:
+      api-key: ${QWEN_VL_API_KEY:}           # 请在 application-dev.yml 或环境变量中配置
+      model: qwen-vl-plus
+      enabled: ${QWEN_VL_ENABLED:true}
+
+# Knife4j API文档
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+  api-docs:
+    path: /v3/api-docs
+
+# 日志
+logging:
+  level:
+    com.campus.lostfound: debug
+    org.springframework.security: info
