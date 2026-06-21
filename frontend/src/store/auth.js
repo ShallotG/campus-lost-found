@@ -11,6 +11,7 @@ export const useAuthStore = defineStore('auth', () => {
   const userName = computed(() => userInfo.value?.realName || userInfo.value?.username || '')
 
   function setTokens(access, refresh) {
+    if (!access || access === 'null') return
     accessToken.value = access
     refreshToken.value = refresh
     sessionStorage.setItem('accessToken', access)
@@ -18,6 +19,7 @@ export const useAuthStore = defineStore('auth', () => {
   }
 
   function setUserInfo(info) {
+    if (!info) return
     userInfo.value = info
     sessionStorage.setItem('userInfo', JSON.stringify(info))
     sessionStorage.setItem('userRole', info.role)

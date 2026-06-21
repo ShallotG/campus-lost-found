@@ -37,8 +37,7 @@
             <div class="item-info">
               <div class="item-category">
                 <el-tag type="primary">{{ item.category }}</el-tag>
-                </span>
-              </div>
+                </div>
               <p><strong>存放位置：</strong>{{ item.storageLocation }}</p>
               <p v-if="item.remark"><strong>备注：</strong>{{ item.remark }}</p>
               <p><strong>登记时间：</strong>{{ item.createTime }}</p>

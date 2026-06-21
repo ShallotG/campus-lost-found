@@ -8,12 +8,6 @@ spring:
   datasource:
     password: 123456
 
-# 文件存储 — 阿里云OSS密钥
-file:
-  oss:
-    access-key-id: LTAI5tABnw2BDGT9jrNMfUig
-    access-key-secret: H2fAyceMfQmfGugZG16VjZPBmKgz8F
-
 # AI服务密钥
 ai:
   deepseek:
