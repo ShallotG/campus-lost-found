@@ -17,7 +17,7 @@ import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-@Tag(name = "拾物管理", description = "拾物CRUD、图片上传、YOLO检测")
+@Tag(name = "拾物管理", description = "拾物CRUD、图片上传、千问vl检测")
 @RestController
 @RequestMapping("/api/lost-items")
 @RequiredArgsConstructor
@@ -26,14 +26,14 @@ public class LostItemController {
     private final LostItemService lostItemService;
     private final JwtTokenProvider jwtTokenProvider;
 
-    @Operation(summary = "上传图片并触发YOLO检测")
+    @Operation(summary = "上传图片并触发千问vl检测")
     @PostMapping("/upload")
     @PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")
     public Result<ImageUploadResponse> uploadImage(@RequestParam("file") MultipartFile file) {
         return Result.ok("上传成功", lostItemService.uploadImage(file));
     }
 
-    @Operation(summary = "仅YOLO检测（不保存文件，不触发OSS上传）")
+    @Operation(summary = "千问vl检测（不保存文件，不触发OSS上传）")
     @PostMapping("/detect")
     @PreAuthorize("hasAnyAuthority('ROLE_STAFF', 'ROLE_ADMIN')")
     public Result<ImageUploadResponse> detectOnly(@RequestParam("file") MultipartFile file) {

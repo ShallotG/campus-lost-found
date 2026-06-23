@@ -38,6 +38,8 @@ public class SecurityConfig {
                         .requestMatchers("/uploads/**").permitAll()
                         // API文档 - 公开
                         .requestMatchers("/swagger-ui/**", "/v3/api-docs/**", "/doc.html").permitAll()
+                        // 用户自助接口 - 需登录
+                        .requestMatchers("/api/users/me/**").authenticated()
                         // 失主端 - 需要 USER 角色
                         .requestMatchers("/api/match-confirm/**").hasAuthority("ROLE_USER")
                         // 管理端 - 需要 STAFF 或 ADMIN 角色
@@ -49,9 +51,9 @@ public class SecurityConfig {
                         .requestMatchers("/api/users/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/configs/**").hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/api/system-logs/**").hasAuthority("ROLE_ADMIN")
-                        // 检索接口 - 需要认证
+                        // 检索接口 - 需认证
                         .requestMatchers("/api/search/**").authenticated()
-                        // 其他请求 - 需要认证
+                        // 其他请求 - 需认证
                         .anyRequest().authenticated()
                 )
                 .addFilterBefore(jwtAuthenticationFilter, UsernamePasswordAuthenticationFilter.class);

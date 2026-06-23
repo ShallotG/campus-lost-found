@@ -15,3 +15,15 @@ export function refreshToken(data) {
 export function logout() {
   return request.post('/auth/logout')
 }
+
+export function getUserInfo() {
+  return request.get('/users/me')
+}
+
+export function updateProfile(data) {
+  return request.put('/users/me', data)
+}
+
+export function changePassword(data) {
+  return request.put('/users/me/password', data)
+}

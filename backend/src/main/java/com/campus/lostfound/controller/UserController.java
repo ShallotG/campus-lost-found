@@ -5,16 +5,20 @@ import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.campus.lostfound.common.BusinessException;
 import com.campus.lostfound.common.PageResult;
 import com.campus.lostfound.common.Result;
+import com.campus.lostfound.dto.request.UpdateProfileRequest;
+import com.campus.lostfound.dto.request.ChangePasswordRequest;
 import com.campus.lostfound.entity.User;
 import com.campus.lostfound.mapper.UserMapper;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.access.prepost.PreAuthorize;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.*;
 
-@Tag(name = "用户管理", description = "管理员管理用户账号")
+@Tag(name = "用户管理", description = "管理员管理用户账号 / 用户自助操作")
 @RestController
 @RequestMapping("/api/users")
 @RequiredArgsConstructor
@@ -37,7 +41,6 @@ public class UserController {
         wrapper.orderByDesc(User::getCreateTime);
 
         Page<User> userPage = userMapper.selectPage(new Page<>(page, size), wrapper);
-        // 脱敏：不返回密码
         userPage.getRecords().forEach(u -> u.setPassword(null));
 
         PageResult<User> pageResult = new PageResult<>(
@@ -73,7 +76,7 @@ public class UserController {
         if (user.getPassword() != null && !user.getPassword().isEmpty()) {
             user.setPassword(passwordEncoder.encode(user.getPassword()));
         } else {
-            user.setPassword(null); // 不更新密码
+            user.setPassword(null);
         }
         userMapper.updateById(user);
         return Result.ok("更新成功");
@@ -89,5 +92,59 @@ public class UserController {
         }
         userMapper.deleteById(id);
         return Result.ok("删除成功");
+    }
+
+    // ==================== 用户自助接口 ====================
+
+    @Operation(summary = "获取当前用户信息")
+    @GetMapping("/me")
+    public Result<User> currentUser() {
+        Long userId = getCurrentUserId();
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+        user.setPassword(null);
+        return Result.ok(user);
+    }
+
+    @Operation(summary = "更新个人资料")
+    @PutMapping("/me")
+    public Result<User> updateProfile(@Valid @RequestBody UpdateProfileRequest request) {
+        Long userId = getCurrentUserId();
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+        if (request.getRealName() != null) user.setRealName(request.getRealName());
+        if (request.getPhone() != null) user.setPhone(request.getPhone());
+        if (request.getEmail() != null) user.setEmail(request.getEmail());
+        userMapper.updateById(user);
+        user.setPassword(null);
+        return Result.ok("更新成功", user);
+    }
+
+    @Operation(summary = "修改密码")
+    @PutMapping("/me/password")
+    public Result<Void> changePassword(@Valid @RequestBody ChangePasswordRequest request) {
+        Long userId = getCurrentUserId();
+        User user = userMapper.selectById(userId);
+        if (user == null) {
+            throw new BusinessException(404, "用户不存在");
+        }
+        if (!passwordEncoder.matches(request.getOldPassword(), user.getPassword())) {
+            throw new BusinessException("原密码不正确");
+        }
+        user.setPassword(passwordEncoder.encode(request.getNewPassword()));
+        userMapper.updateById(user);
+        return Result.ok("密码修改成功");
+    }
+
+    private Long getCurrentUserId() {
+        Object credentials = SecurityContextHolder.getContext().getAuthentication().getCredentials();
+        if (credentials instanceof Long) {
+            return (Long) credentials;
+        }
+        throw new BusinessException(401, "未登录");
     }
 }
