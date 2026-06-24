@@ -1,7 +1,7 @@
-<template>
+﻿<template>
   <div class="register-page">
-    <el-card class="register-card">
-      <h2 class="register-title">失主注册</h2>
+    <el-card class="register-card" shadow="always">
+      <h2 class="register-title">用户注册</h2>
       <el-form ref="formRef" :model="form" :rules="rules" label-position="top">
         <el-form-item label="学号/工号" prop="username">
           <el-input v-model="form.username" placeholder="请输入学号或工号" />
@@ -19,7 +19,7 @@
           <el-input v-model="form.phone" placeholder="请输入联系电话（可选）" />
         </el-form-item>
         <el-form-item>
-          <el-button type="primary" :loading="loading" style="width:100%" @click="handleRegister">注册</el-button>
+          <el-button type="primary" :loading="loading" style="width:100%" size="large" @click="handleRegister">注 册</el-button>
         </el-form-item>
       </el-form>
       <p class="link">已有账号？<router-link to="/user/login">立即登录</router-link></p>
@@ -44,6 +44,7 @@ const rules = {
     { required: true, message: '请确认密码', trigger: 'blur' },
     { validator: (rule, value, cb) => value === form.password ? cb() : cb(new Error('两次密码不一致')), trigger: 'blur' },
   ],
+  phone: [{ pattern: /^1[3-9]\d{9}$/, message: '手机号格式不正确', trigger: 'blur' }],
 }
 
 async function handleRegister() {
@@ -54,16 +55,16 @@ async function handleRegister() {
     await register(form)
     ElMessage.success('注册成功，请登录')
     router.push('/user/login')
-  } finally {
-    loading.value = false
-  }
+  } catch (e) {
+    ElMessage.error(e?.message || '注册失败')
+  } finally { loading.value = false }
 }
 </script>
 
 <style scoped>
-.register-page { display: flex; justify-content: center; padding: 24px; }
-.register-card { width: 440px; }
-.register-title { text-align: center; margin-bottom: 20px; font-size: 22px; }
+.register-page { display: flex; justify-content: center; padding: 30px 20px; }
+.register-card { width: 440px; max-width: 100%; }
+.register-title { text-align: center; margin-bottom: 20px; font-size: 20px; color: #303133; }
 .link { text-align: center; font-size: 13px; color: #909399; }
 .link a { color: #409eff; }
 </style>

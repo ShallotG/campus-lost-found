@@ -3,30 +3,54 @@ import { createRouter, createWebHistory } from 'vue-router'
 const routes = [
   {
     path: '/',
-    redirect: '/user/login',
+    redirect: '/user/browse',
   },
-  // ==================== 失主端 ====================
+  // ==================== 用户端 ====================
   {
     path: '/user',
     component: () => import('@/layouts/UserLayout.vue'),
     children: [
       {
+        path: 'browse',
+        name: 'Browse',
+        component: () => import('@/views/user/BrowseView.vue'),
+        meta: { title: '浏览失物' },
+      },
+      {
         path: 'login',
         name: 'UserLogin',
         component: () => import('@/views/user/LoginView.vue'),
-        meta: { title: '失主登录' },
+        meta: { title: '用户登录' },
       },
       {
         path: 'register',
         name: 'UserRegister',
         component: () => import('@/views/user/RegisterView.vue'),
-        meta: { title: '失主注册' },
+        meta: { title: '用户注册' },
       },
       {
         path: 'search',
         name: 'Search',
         component: () => import('@/views/user/SearchView.vue'),
-        meta: { title: '物品检索', requiresAuth: true, role: 'ROLE_USER' },
+        meta: { title: '智能检索', requiresAuth: true, role: 'ROLE_USER' },
+      },
+      {
+        path: 'item/:id',
+        name: 'ItemDetail',
+        component: () => import('@/views/user/ItemDetailView.vue'),
+        meta: { title: '物品详情' },
+      },
+      {
+        path: 'publish',
+        name: 'PublishLost',
+        component: () => import('@/views/user/PublishLostView.vue'),
+        meta: { title: '发布寻物', requiresAuth: true },
+      },
+      {
+        path: 'my-posts',
+        name: 'MyPosts',
+        component: () => import('@/views/user/MyPostsView.vue'),
+        meta: { title: '我的发布', requiresAuth: true },
       },
       {
         path: 'confirm-result',
@@ -39,6 +63,12 @@ const routes = [
         name: 'Profile',
         component: () => import('@/views/user/ProfileView.vue'),
         meta: { title: '个人中心', requiresAuth: true },
+      },
+      {
+        path: 'notifications',
+        name: 'Notifications',
+        component: () => import('@/views/user/NotificationView.vue'),
+        meta: { title: '消息通知', requiresAuth: true },
       },
     ],
   },
@@ -76,6 +106,12 @@ const routes = [
         meta: { title: '拾物列表', requiresAuth: true, role: ['ROLE_STAFF', 'ROLE_ADMIN'] },
       },
       {
+        path: 'found-items',
+        name: 'FoundItemList',
+        component: () => import('@/views/admin/FoundItemListView.vue'),
+        meta: { title: '寻物启事列表', requiresAuth: true, role: ['ROLE_STAFF', 'ROLE_ADMIN'] },
+      },
+      {
         path: 'users',
         name: 'UserManage',
         component: () => import('@/views/admin/UserManageView.vue'),
@@ -102,7 +138,6 @@ const router = createRouter({
   routes,
 })
 
-// 路由守卫
 router.beforeEach((to, from, next) => {
   document.title = to.meta.title ? `${to.meta.title} - 失物招领平台` : '智能校园失物招领平台'
 
@@ -114,7 +149,6 @@ router.beforeEach((to, from, next) => {
 
   if (requiresAuth) {
     if (!accessToken) {
-      // 未登录
       const loginPath = to.path.startsWith('/admin') ? '/admin/login' : '/user/login'
       next({ path: loginPath, query: { redirect: to.fullPath } })
       return
@@ -129,10 +163,9 @@ router.beforeEach((to, from, next) => {
     }
   }
 
-  // 已登录用户访问登录页，重定向到首页
   if (accessToken && (to.name === 'UserLogin' || to.name === 'AdminLogin')) {
     if (userRole === 'ROLE_USER') {
-      next('/user/search')
+      next('/user/browse')
     } else {
       next('/admin/dashboard')
     }

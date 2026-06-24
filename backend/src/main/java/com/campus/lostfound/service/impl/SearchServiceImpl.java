@@ -26,6 +26,8 @@ public class SearchServiceImpl implements SearchService {
     public SearchResultResponse search(SearchRequest request) {
         long startTime = System.currentTimeMillis();
         int topK = request.getTopK() != null ? request.getTopK() : 5;
+        int page = request.getPage() != null ? request.getPage() : 1;
+        int size = request.getSize() != null ? request.getSize() : 10;
         String query = request.getQuery();
 
         // 1. DeepSeek Chat API 提取关键词
@@ -41,8 +43,8 @@ public class SearchServiceImpl implements SearchService {
             keywords = extractKeywords(query);
         }
 
-        // 3. 关键词搜索
-        List<LostItem> candidates = keywordSearch(keywords, Math.max(topK * 3, 20));
+        // 3. 关键词搜索所有候选
+        List<LostItem> candidates = keywordSearch(keywords, 200);
 
         // 4. 关键词无结果时，字符级回退搜索
         if (candidates.isEmpty() && keywords.stream().anyMatch(k -> k.length() >= 2)) {
@@ -56,7 +58,7 @@ public class SearchServiceImpl implements SearchService {
                 }
             }
             if (!charKeys.isEmpty()) {
-                candidates = keywordSearch(charKeys, Math.max(topK * 3, 20));
+                candidates = keywordSearch(charKeys, 200);
             }
         }
 
@@ -75,14 +77,23 @@ public class SearchServiceImpl implements SearchService {
                     .build());
         }
 
-        List<SearchResultResponse.SearchResultItem> results = scoredItems.stream()
-                .sorted(Comparator.comparingDouble(
-                        SearchResultResponse.SearchResultItem::getMatchScore).reversed())
-                .limit(topK)
-                .collect(Collectors.toList());
+        // 按匹配度降序
+        scoredItems.sort(Comparator.comparingDouble(
+                SearchResultResponse.SearchResultItem::getMatchScore).reversed());
 
-        // 6. Top1 生成匹配解释
-        if (!results.isEmpty()) {
+        int total = scoredItems.size();
+        int fromIndex = (page - 1) * size;
+        int toIndex = Math.min(fromIndex + size, total);
+
+        List<SearchResultResponse.SearchResultItem> results;
+        if (fromIndex >= total) {
+            results = Collections.emptyList();
+        } else {
+            results = scoredItems.subList(fromIndex, toIndex);
+        }
+
+        // 6. Top1 生成匹配解释（仅第一页）
+        if (!results.isEmpty() && page == 1) {
             SearchResultResponse.SearchResultItem top1 = results.get(0);
             try {
                 String explanation = chatClient.generateExplanation(
@@ -97,12 +108,15 @@ public class SearchServiceImpl implements SearchService {
         long queryTime = System.currentTimeMillis() - startTime;
         log.info("检索完成: query={}, 匹配数={}, 耗时={}ms",
                 query.substring(0, Math.min(30, query.length())),
-                results.size(), queryTime);
+                total, queryTime);
 
         return SearchResultResponse.builder()
                 .results(results)
-                .totalCompared(candidates.size())
+                .totalCompared(total)
                 .queryTime(queryTime)
+                .total(total)
+                .page(page)
+                .pages((total + size - 1) / size)
                 .build();
     }
 
@@ -167,12 +181,12 @@ public class SearchServiceImpl implements SearchService {
 
     private static final Set<String> STOP_WORDS = Set.of(
         "我", "你", "他", "她", "它", "我们", "你们", "他们", "我的", "你的",
-        "的", "了", "是", "在", "有", "和", "不", "也", "个", "都", "就",
+        "的", "了", "是", "在", "有", "和", "与", "不", "都", "就",
         "这个", "那个", "哪个", "什么", "怎么", "如何", "为什么",
         "帮忙", "帮", "找", "寻找", "找到", "看看", "看见", "看到",
         "丢失", "遗失", "掉了", "弄丢", "不见了", "找不到",
         "捡到", "捡到一个", "有没有", "是否有", "能不能", "可以",
-        "一个", "一件", "一把", "一条", "一台",
+        "一个", "一件", "一把", "一条", "一只",
         "请问", "麻烦", "谢谢", "你好", "您好", "想要"
     );
 
@@ -181,7 +195,7 @@ public class SearchServiceImpl implements SearchService {
     private List<String> extractKeywords(String query) {
         Set<String> keywords = new LinkedHashSet<>();
 
-        String[] segments = query.split("[\\s，。！？；：、,.;:!?()（）\\[\\]【】]+");
+        String[] segments = query.split("[\\s，。！？；：、.;:!?()（）\\[\\]【】]+");
 
         for (String seg : segments) {
             String cleaned = seg;
@@ -215,5 +229,4 @@ public class SearchServiceImpl implements SearchService {
         log.info("关键词提取: \"{}\" -> {}", query, keywords);
         return new ArrayList<>(keywords);
     }
-
 }

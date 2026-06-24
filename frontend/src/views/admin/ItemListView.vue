@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <div class="item-list">
     <el-card>
       <template #header>
@@ -43,12 +43,12 @@
           </template>
         </el-table-column>
         <el-table-column prop="createTime" label="登记时间" width="170" />
-        <el-table-column label="操作" width="200" fixed="right">
+        <el-table-column label="操作" width="220" fixed="right">
           <template #default="{ row }">
             <el-button v-if="row.status === 'UNCLAIMED'" type="success" size="small" @click="openClaimDialog(row)">
               领取
             </el-button>
-            <el-button v-if="row.status === 'UNCLAIMED'" size="small" @click="handleEdit(row)">编辑</el-button>
+            <el-button v-if="row.status === 'UNCLAIMED'" size="small" @click="openEditDialog(row)">编辑</el-button>
             <el-button v-if="userRole === 'ROLE_ADMIN'" type="danger" size="small" @click="handleDelete(row.id)">
               删除
             </el-button>
@@ -66,8 +66,8 @@
       />
     </el-card>
 
-    <!-- 领取登记弹窗 -->
     <ClaimDialog ref="claimDialogRef" @success="fetchData" />
+    <EditItemDialog ref="editDialogRef" @success="fetchData" />
   </div>
 </template>
 
@@ -77,43 +77,30 @@ import { useAuthStore } from '@/store/auth'
 import { getLostItemList, deleteLostItem } from '@/api/lostItem'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import ClaimDialog from '@/components/ClaimDialog.vue'
+import EditItemDialog from '@/components/EditItemDialog.vue'
 
 const authStore = useAuthStore()
 const userRole = computed(() => authStore.userRole)
 
 const loading = ref(false)
 const records = ref([])
-const page = ref(1)
-const size = ref(10)
-const total = ref(0)
+const page = ref(1), size = ref(10), total = ref(0)
 const filters = reactive({ status: '', category: '', keyword: '' })
 const claimDialogRef = ref(null)
+const editDialogRef = ref(null)
 
 onMounted(() => fetchData())
 
 async function fetchData() {
   loading.value = true
   try {
-    const data = await getLostItemList({
-      page: page.value,
-      size: size.value,
-      ...filters,
-    })
-    records.value = data.records
-    total.value = data.total
-  } finally {
-    loading.value = false
-  }
+    const data = await getLostItemList({ page: page.value, size: size.value, ...filters })
+    records.value = data.records; total.value = data.total
+  } finally { loading.value = false }
 }
 
-function openClaimDialog(row) {
-  claimDialogRef.value?.open(row)
-}
-
-function handleEdit(row) {
-  // 简化处理：弹出编辑框
-  ElMessage.info('编辑功能请在更新API中实现')
-}
+function openClaimDialog(row) { claimDialogRef.value?.open(row) }
+function openEditDialog(row) { editDialogRef.value?.open(row) }
 
 async function handleDelete(id) {
   try {

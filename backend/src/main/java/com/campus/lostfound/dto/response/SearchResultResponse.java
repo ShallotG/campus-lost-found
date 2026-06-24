@@ -11,8 +11,11 @@ import java.util.List;
 public class SearchResultResponse {
 
     private List<SearchResultItem> results;
-    private long totalCompared;
+    private int totalCompared;
     private long queryTime;
+    private long total;
+    private long page;
+    private long pages;
 
     @Data
     @Builder
@@ -22,8 +25,8 @@ public class SearchResultResponse {
         private String category;
         private String storageLocation;
         private String remark;
-        private LocalDateTime createTime;
         private Double matchScore;
         private String explanation;
+        private LocalDateTime createTime;
     }
 }

@@ -10,4 +10,8 @@ public class SearchRequest {
     private String query;
 
     private Integer topK = 5;
+
+    private Integer page = 1;
+
+    private Integer size = 10;
 }
